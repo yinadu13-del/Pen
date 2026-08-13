@@ -139,6 +139,13 @@
         </div>
 
         <div class="w-full h-72 sm:h-80 cursor-pointer perspective-1000 relative" id="flashcard" onclick="flipCard()">
+            <!-- Nút Phát âm (Loa) -->
+            <button onclick="speakText(currentVocabulary[currentIndex].hanzi, event)" class="absolute top-6 left-6 z-10 p-2 rounded-full hover:bg-gray-100 transition-colors group btn-hover-effect" title="Phát âm (Phím S)">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-gray-300 group-hover:text-blue-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                </svg>
+            </button>
+
             <!-- Nút Đánh dấu (Star) -->
             <button onclick="toggleReview(event)" class="absolute top-6 right-6 z-10 p-2 rounded-full hover:bg-gray-100 transition-colors group btn-hover-effect" title="Đánh dấu chưa thuộc">
                 <svg id="star-icon" xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-gray-300 group-hover:text-amber-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -203,7 +210,14 @@
             </div>
 
             <!-- Câu hỏi -->
-            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center mb-6">
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center mb-6 relative">
+                <!-- Nút Phát âm (Loa) -->
+                <button onclick="speakText(currentVocabulary[currentIndex].hanzi, event)" class="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-100 transition-colors group btn-hover-effect" title="Phát âm (Phím S)">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-300 group-hover:text-purple-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                    </svg>
+                </button>
+                
                 <h2 class="text-6xl font-bold text-gray-800 mb-4" id="quiz-hanzi">汉字</h2>
                 <p class="text-2xl text-gray-500" id="quiz-pinyin">pinyin</p>
             </div>
@@ -583,6 +597,25 @@
             updateCard();
         }
 
+        // Hàm phát âm tiếng Trung
+        function speakText(text, event) {
+            if (event) event.stopPropagation(); // Ngăn lật thẻ khi bấm loa
+            
+            if (!('speechSynthesis' in window)) {
+                showToast("Trình duyệt của bạn không hỗ trợ tính năng phát âm.");
+                return;
+            }
+            
+            // Hủy giọng đọc hiện tại nếu đang đọc
+            window.speechSynthesis.cancel();
+            
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'zh-CN'; // Tiếng Trung giản thể
+            utterance.rate = 0.85; // Tốc độ đọc chậm một chút để dễ nghe
+            
+            window.speechSynthesis.speak(utterance);
+        }
+
         function renderQuizQuestion() {
             isQuizAnswered = false;
             const word = currentVocabulary[currentIndex];
@@ -661,6 +694,13 @@
 
         // Bàn phím điều hướng
         document.addEventListener('keydown', (e) => {
+            // Bấm phím S để phát âm
+            if (!DOM.learningSection.classList.contains('hidden') || !DOM.quizSection.classList.contains('hidden')) {
+                if (e.key === 's' || e.key === 'S') {
+                    speakText(currentVocabulary[currentIndex].hanzi);
+                }
+            }
+
             if(!DOM.learningSection.classList.contains('hidden')) {
                 if (e.code === 'Space') {
                     e.preventDefault(); flipCard();
