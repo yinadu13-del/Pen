@@ -569,7 +569,34 @@
             }, 3000);
         }
 
+        // Giọng đọc tiếng Trung chuẩn (Amazon Polly - giọng "Zhiyu", qua StreamElements TTS)
+        // Thay cho giọng speechSynthesis mặc định của trình duyệt (thường là giọng robot/Google TTS chất lượng thấp)
+        let currentSpeakAudio = null;
+
         function speak(text) {
+            if (!text) return;
+
+            // Dừng âm thanh đang phát (nếu có) trước khi phát từ mới
+            if (currentSpeakAudio) {
+                currentSpeakAudio.pause();
+                currentSpeakAudio.currentTime = 0;
+                currentSpeakAudio = null;
+            }
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+            }
+
+            const audioUrl = `https://api.streamelements.com/kappa/v2/speech?voice=Zhiyu&text=${encodeURIComponent(text)}`;
+            const audio = new Audio(audioUrl);
+            currentSpeakAudio = audio;
+
+            audio.play().catch(() => {
+                // Nếu API âm thanh lỗi (mất mạng, bị chặn...) thì dùng giọng dự phòng của trình duyệt
+                fallbackSpeak(text);
+            });
+        }
+
+        function fallbackSpeak(text) {
             if ('speechSynthesis' in window) {
                 const utterance = new SpeechSynthesisUtterance(text);
                 utterance.lang = 'zh-CN';
